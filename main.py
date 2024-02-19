@@ -3,7 +3,7 @@ import os
 
 
 class QLearningAgent:
-    def __init__(self, num_states, num_actions, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.1):
+    def __init__(self, num_states, num_actions, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.9):
         self.num_states = num_states
         self.num_actions = num_actions
         self.learning_rate = learning_rate
@@ -12,6 +12,7 @@ class QLearningAgent:
         self.q_table = np.zeros((num_states, num_actions))
 
     def choose_action(self, state, training=True):
+        print(state)
         if training and np.random.uniform(0, 1) < self.exploration_rate:
             return np.random.choice(self.num_actions)  # Explore action space
         else:
@@ -78,7 +79,7 @@ def main():
     # Option to load Q table values from a file
     load_q_table = input("Do you want to load Q table values from a file? (y/n): ").lower().strip()
     if load_q_table == 'y':
-        file_path = "./q_table.npy"
+        file_path = "q_table.npy"
         agent.load_q_table(file_path)
 
     num_episodes = 100
@@ -127,7 +128,7 @@ def main():
     # Option to save Q table values to a file
     save_q_table = input("Do you want to save Q table values to a file? (y/n): ").lower().strip()
     if save_q_table == 'y':
-        file_path = "./q_table"
+        file_path = "q_table"
         agent.save_q_table(file_path)
 
 if __name__ == "__main__":
