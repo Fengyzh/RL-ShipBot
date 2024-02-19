@@ -1,8 +1,9 @@
 import numpy as np
 import os
 
+
 class QLearningAgent:
-    def __init__(self, num_states, num_actions, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.9):
+    def __init__(self, num_states, num_actions, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.1):
         self.num_states = num_states
         self.num_actions = num_actions
         self.learning_rate = learning_rate
