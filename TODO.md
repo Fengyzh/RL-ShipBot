@@ -1,3 +1,8 @@
+# Versions
+ - nQL.py and testQ.py are all for testing, you can play around with it
+ - DQN3.py is what I'm working on for DQN
+
+
 # Use Partial vision in Q table learning
 
 ## How to implement:
