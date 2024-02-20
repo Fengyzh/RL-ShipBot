@@ -36,8 +36,8 @@ testPos = [1,0]
 '''
 pos = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0,0], [0,1], [1,-1], [1, 0], [1,1]]
 visionPos = [[0,0], [0,1], [0,2], [1,0], [1,1], [1,2], [2,0], [2,1], [2,2]]
-def env_to_vision(env, agent_pos):
-    vision_list = np.full((9,), 0)
+def env_to_vision(env, agent_pos, isTuple=False):
+    vision_list = [0,0,0,0,0,0,0,0,0]
     direction = [True,True,True,True]
     num_col = len(env[0])
 
@@ -54,8 +54,10 @@ def env_to_vision(env, agent_pos):
             vision_list[i] = 5
 
             #vision_list[state_to_index(agent_pos[0] + pos[i][0], agent_pos[1] + pos[i][1] + 1, num_col)] = 1
-
-    print(vision_list)
+    if isTuple:
+        return tuple(vision_list)
+    #print(vision_list)
+    return vision_list
  
 
 
@@ -81,4 +83,4 @@ def state_to_index(row, col, num_cols):
     return row * num_cols + col
 
 
-env_to_vision(testM2, testM2Pos)
+#env_to_vision(testM2, testM2Pos)

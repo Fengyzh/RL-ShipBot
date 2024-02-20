@@ -19,3 +19,4 @@
 # Finished Tasks
     - DQN5.py is a working DQN copy that uses experience replay
         - It has no partial visibility and it takes the whole world as the input state to the NN
+    - QLearn.py currently in Beta, training is working
