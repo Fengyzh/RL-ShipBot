@@ -15,3 +15,7 @@
         - The [0,0,-1,1,5,-1,0,10,-1] represent the surrounding space
         - [1,4,7,2] is the Q value of the action in that state
         - Now the agent no longer depends on the environment but depends on the surrounding information instead
+
+# Finished Tasks
+    - DQN5.py is a working DQN copy that uses experience replay
+        - It has no partial visibility and it takes the whole world as the input state to the NN

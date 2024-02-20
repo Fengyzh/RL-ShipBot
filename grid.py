@@ -1,9 +1,10 @@
 import numpy as np
 import random
+from obstacles import On_Off_Obstacle
 
 def generate_grid_world():
     # Define the size of the grid
-    grid_size = 10
+    grid_size = 5
     
     # Initialize the grid with spaces
     grid = np.full((grid_size, grid_size), ' ')
@@ -29,4 +30,14 @@ def generate_grid_world():
 grid_world = generate_grid_world()
 
 # Print the grid world
-print(grid_world)
+#print(grid_world)
+
+
+
+
+o = On_Off_Obstacle(grid_world, 2, 3)
+o.plot()
+
+for i in range(2):
+    print(grid_world)
+    o.tick()
