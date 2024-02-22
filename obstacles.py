@@ -21,4 +21,4 @@ class On_Off_Obstacle:
         if self.counter < self.end:
             self.env[self.x, self.y] = 'X'
         else:
-            self.env[self.x, self.y] = ' '
+            self.env[self.x, self.y] = '~'

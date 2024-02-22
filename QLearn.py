@@ -25,7 +25,7 @@ map = np.array([
 # Refact out world_size
 # State should be 0-9 representing the surrrounding spaces
 class QLearningAgent:
-    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.9):
+    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.2):
         self.world_size = world_size
         self.q_table = {}
         self.learning_rate = learning_rate
@@ -72,7 +72,7 @@ class QLearningAgent:
         self.q_table = {eval(key): value for key, value in q_table_json.items()}
 
 
-class GridWorld:
+class Environment:
     def __init__(self, world_size):
         self.world_size = world_size
         self.world = map
@@ -137,7 +137,7 @@ def main():
     num_episodes = 1
 
     # Initialize grid world and agent
-    world = GridWorld(world_size)
+    world = Environment(world_size)
     agent = QLearningAgent(world_size)
 
     # User input
@@ -157,6 +157,7 @@ def main():
                 action = agent.choose_action(state)
                 print(action)
                 world.move_agent(ACTIONS[action])
+                # Grid.tick
                 print("PPPPPPPPOS: ", world.agent_pos)
                 print("\n")
                 world.print_world()
@@ -185,14 +186,14 @@ def main():
         world.print_world()
         while True:
             state = world.get_state()
-            action = agent.choose_action(state, mode='play')
+            action = agent.choose_action(state)
             world.move_agent(ACTIONS[action])
             world.print_world()
             print()
-            if world.get_state() == world.destination_pos:
+            if world.world[world.get_pos()] == "END":
                 print("Reached destination!")
                 break
-            elif world.get_state() == None:
+            elif world.world[world.get_pos()] == 'X' :
                 print("Game over! Agent hit an obstacle.")
                 break
 
