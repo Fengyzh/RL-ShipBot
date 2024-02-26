@@ -84,7 +84,7 @@ class Environment:
         self.agent_position = DEFAULT_AGNET_POS  # Starting position of the agent
         self.destination = (7, 3)  # Destination position
         self.state_size = np.prod(sm.shape)
-        self.grid_mapping = {' ': 0, 'X': 1, 'END': 2, 'A': 3}  # Mapping for grid elements
+        self.grid_mapping = {' ': 0, 'X': 1, 'END': 2, 'A': 3, '~': 0}  # Mapping for grid elements
 
     # Because the model can't take in strings, we have to convert the map to ints
     # This function converts the map back to strings for visual purpose
@@ -191,8 +191,6 @@ def play():
     except:
         print("No pre-trained model found, starting training from scratch.")
 
-
-
     #print(env.grid)
 
     for episode in range(2):
@@ -200,17 +198,18 @@ def play():
 
         o = On_Off_Obstacle(env.grid, 2, 3)
         o.plot()
-        env.grid[env.agent_position] = 'A'
+        #env.grid[env.agent_position] = 'A'
         print(env.grid)
 
+        state = env.preprocess_state()  # Initial state
         total_reward = 0
         done = False
 
         while not done:
-            state = env.preprocess_state()
             action = agent.pick_action(state)
             reward, done = env.step(action)
             total_reward += reward
+            state = env.preprocess_state()
             o.tick()
             print("\n")
             env.render()
