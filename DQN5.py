@@ -201,7 +201,7 @@ def play():
         o = Moving_Obstacle(env.grid, 2, 3)
         o.plot()
 
-        #env.grid[env.agent_position] = 'A'
+        env.grid[env.agent_position] = 'A'
         print(env.grid)
 
         state = env.preprocess_state()  # Initial state
@@ -212,8 +212,13 @@ def play():
             action = agent.pick_action(state)
             reward, done = env.step(action)
             total_reward += reward
-            state = env.preprocess_state()
             o.tick()
+            state = env.preprocess_state()
+            print(env.agent_position, o.get_obs_pos())
+            if env.agent_position == o.get_obs_pos():
+                done = True
+                total_reward -= 100
+
             print("\n")
             env.render()
 

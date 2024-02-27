@@ -28,6 +28,9 @@ class On_Off_Obstacle:
             self.env[self.x, self.y] = 'X'
         else:
             self.env[self.x, self.y] = '~'
+    
+    def get_obs_pos(self):
+        return [self.y, self.x]
 
 
 
@@ -48,7 +51,7 @@ class Moving_Obstacle:
 
     def plot(self):
         # Init plot
-        if self.counter == 0:
+        if self.counter < 1:
             self.env[self.x,self.y] = 'X'
             return
         
@@ -72,3 +75,7 @@ class Moving_Obstacle:
             self.env[self.x, self.y] = 'X'
         else:
             self.env[self.x, self.y] = '~'
+        
+
+    def get_obs_pos(self):
+        return [self.y, self.x]
