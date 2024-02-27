@@ -51,7 +51,10 @@ class Moving_Obstacle:
 
     def plot(self):
         # Init plot
-        if self.counter < 1 or self.stop:
+        if self.stop:
+            return
+
+        if self.counter < 1:
             self.env[self.x,self.y] = 'X'
             return
         
