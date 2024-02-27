@@ -51,7 +51,7 @@ class Moving_Obstacle:
 
     def plot(self):
         # Init plot
-        if self.counter < 1:
+        if self.counter < 1 or self.stop:
             self.env[self.x,self.y] = 'X'
             return
         
@@ -70,11 +70,13 @@ class Moving_Obstacle:
             if 0 <= self.x < len(self.env) and 0 <= self.y < len(self.env[0]) and self.env[self.x, self.y] != 'X':
                 self.env[self.x, self.y] = 'X'
                 self.env[temp[0], temp[1]] = '~'
+            else:
+                self.stop = True
             
         elif self.counter < self.end:
             self.env[self.x, self.y] = 'X'
         else:
-            self.env[self.x, self.y] = '~'
+            self.stop = True
         
 
     def get_obs_pos(self):
