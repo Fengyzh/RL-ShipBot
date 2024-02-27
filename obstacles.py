@@ -11,7 +11,7 @@ x, y: x y cords
 end: how many tick to end
 '''
 class On_Off_Obstacle:
-    def __init__(self, env, x, y, end=1, times=1):
+    def __init__(self, env, y, x, end=1, times=1):
         self.time = times
         self.counter = 0
         self.env = env
@@ -35,7 +35,7 @@ class On_Off_Obstacle:
 
 
 class Moving_Obstacle:
-    def __init__(self, env, x, y, dir='up', end=-1):
+    def __init__(self, env, y, x, dir='up', end=-1):
         self.dir = dir
         self.counter = 0
         self.env = env
