@@ -11,7 +11,7 @@ class GridWorld:
         self.dynamic_obstacles = []
         self.grid = np.full((self.width, self.length), '~')
 
-    def generate_grid_world(self):
+    def generate_grid_world(self, onOffObstacles):
         # Place the agent at the top-left corner
         self.grid[0, 0] = 'A'
         
@@ -27,6 +27,9 @@ class GridWorld:
                     obstacle_x, obstacle_y = random.randint(0, self.width-1), random.randint(0, self.length-1)
 
                 self.grid[obstacle_x, obstacle_y] = 'X'
+
+        if (onOffObstacles):
+            self.add_on_off_obstacles()
 
     def add_on_off_obstacles(self):
         # Place an obstacle at a random position
@@ -47,12 +50,12 @@ class GridWorld:
             obj.tick()
 
 
-# Generate the grid world
-grid_world = GridWorld()
-grid_world.generate_grid_world()
-grid_world.add_on_off_obstacles()
+if __name__ == "__main__":
+    # Generate the grid world
+    grid_world = GridWorld()
+    grid_world.generate_grid_world(True)
 
-for i in range(5):
-    print(grid_world.grid)
-    print("-----------------------------------")
-    grid_world.tick()
+    for i in range(5):
+        print(grid_world.grid)
+        print("-----------------------------------")
+        grid_world.tick()
