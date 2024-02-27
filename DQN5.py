@@ -2,7 +2,7 @@ import tensorflow as tf
 from collections import deque
 import numpy as np
 import random
-from obstacles import On_Off_Obstacle
+from obstacles import On_Off_Obstacle, Moving_Obstacle
 
 
 DEFAULT_AGNET_POS = (7, 1)  # Put the agent at this spot
@@ -80,7 +80,7 @@ class DQNAgent:
 
 class Environment:
     def __init__(self):
-        self.grid = sm
+        self.grid = sm.copy()
         self.agent_position = DEFAULT_AGNET_POS  # Starting position of the agent
         self.destination = (7, 3)  # Destination position
         self.state_size = np.prod(sm.shape)
@@ -95,6 +95,7 @@ class Environment:
     # Reset Agent pos
     def reset(self):
         self.agent_position = DEFAULT_AGNET_POS
+        self.grid = sm.copy()
 
     def step(self, action):
         if action == 0:  # Move up
@@ -196,8 +197,10 @@ def play():
     for episode in range(2):
         print("-------------- Start Iter ------------------")
 
-        o = On_Off_Obstacle(env.grid, 2, 3)
+        #o = On_Off_Obstacle(env.grid, 2, 3)
+        o = Moving_Obstacle(env.grid, 2, 3)
         o.plot()
+
         #env.grid[env.agent_position] = 'A'
         print(env.grid)
 
