@@ -2,6 +2,7 @@ import numpy as np
 import random
 import json
 from util import env_to_vision
+from grid import GridWorld
 
 # Define constants
 EMPTY = 0
@@ -10,17 +11,6 @@ AGENT = 2
 DESTINATION = 3
 ACTIONS = ['up', 'down', 'left', 'right']
 
-
-map = np.array([
-        [" ", " ", "X", " "],
-        [" ", " ", "X", " "],
-        [" ", " ", " ", " "],
-        [" ", " ", " ", "X"],
-        [" ", " ", "X", " "],
-        [" ", " ", " ", " "],
-        [" ", " ", "X", "A"],
-        [" ", " ", " ", "END"]
-        ])
 
 # Refact out world_size
 # State should be 0-9 representing the surrrounding spaces
@@ -75,15 +65,21 @@ class QLearningAgent:
 class Environment:
     def __init__(self, world_size):
         self.world_size = world_size
-        self.world = map
-        self.agent_pos = (6,3)
+        self.agent_pos = (0,0)
         self.destination_pos = (world_size - 1, world_size - 1)
-        self.obstacles = [[2,2]]
         self.done = False
 
+        # Builds Map
+        self.gridWorld = GridWorld(self.world_size, self.world_size)
+        self.gridWorld.generate_grid_world(True)
+        self.world = self.gridWorld.grid
+
+    def tick(self):
+        self.gridWorld.tick()
+        self.world = self.gridWorld.grid
 
     def reset(self):
-        self.agent_pos = (6, 3)
+        self.agent_pos = (0, 0)
 
     def is_valid_move(self, pos):
         return 0 <= pos[0] < len(self.world) and 0 <= pos[1] < len(self.world[0]) and self.world[pos[0], pos[1]] != 'X'
@@ -99,7 +95,7 @@ class Environment:
         elif action == 'right':
             new_pos = (self.agent_pos[0], self.agent_pos[1] + 1)
 
-        self.world[self.agent_pos] = ' '
+        self.world[self.agent_pos] = '~'
 
         if 0 <= new_pos[0] < len(self.world) and 0 <= new_pos[1] < len(self.world[0]):
             # Move agent
@@ -133,7 +129,7 @@ class Environment:
 
 def main():
     # Define parameters
-    world_size = 6
+    world_size = 12
     num_episodes = 1
 
     # Initialize grid world and agent
@@ -157,7 +153,10 @@ def main():
                 action = agent.choose_action(state)
                 print(action)
                 world.move_agent(ACTIONS[action])
+
                 # Grid.tick
+                world.tick()
+
                 print("PPPPPPPPOS: ", world.agent_pos)
                 print("\n")
                 world.print_world()
@@ -184,10 +183,15 @@ def main():
         # Test loop
         world.reset()
         world.print_world()
+
         while True:
             state = world.get_state()
             action = agent.choose_action(state)
             world.move_agent(ACTIONS[action])
+
+            # Grid.tick
+            world.tick()
+
             world.print_world()
             print()
             if world.world[world.get_pos()] == "END":
