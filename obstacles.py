@@ -30,7 +30,7 @@ class On_Off_Obstacle:
             self.env[self.x, self.y] = '~'
     
     def get_obs_pos(self):
-        return [self.y, self.x]
+        return (self.y, self.x)
 
 
 
@@ -78,4 +78,4 @@ class Moving_Obstacle:
         
 
     def get_obs_pos(self):
-        return [self.y, self.x]
+        return (self.y, self.x)

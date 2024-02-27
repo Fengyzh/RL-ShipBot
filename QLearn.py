@@ -71,7 +71,7 @@ class Environment:
 
         # Builds Map
         self.gridWorld = GridWorld(self.world_size, self.world_size)
-        self.gridWorld.generate_grid_world(True)
+        self.gridWorld.generate_grid_world(True, True)
         self.world = self.gridWorld.grid
 
     def tick(self):
@@ -132,8 +132,8 @@ def main():
     world_size = 12
     num_episodes = 1
 
-    # Initialize grid world and agent
-    world = Environment(world_size)
+    # Initialize grid environment and agent
+    environment = Environment(world_size)
     agent = QLearningAgent(world_size)
 
     # User input
@@ -181,23 +181,22 @@ def main():
         agent.load_q_table("q_tableq.json")
 
         # Test loop
-        world.reset()
-        world.print_world()
+        environment.reset()
 
         while True:
-            state = world.get_state()
+            state = environment.get_state()
             action = agent.choose_action(state)
-            world.move_agent(ACTIONS[action])
+            environment.move_agent(ACTIONS[action])
 
             # Grid.tick
-            world.tick()
+            environment.tick()
 
-            world.print_world()
+            environment.print_world()
             print()
-            if world.world[world.get_pos()] == "END":
+            if environment.world[environment.get_pos()] == "END":
                 print("Reached destination!")
                 break
-            elif world.world[world.get_pos()] == 'X' :
+            elif environment.world[environment.get_pos()] == 'X' :
                 print("Game over! Agent hit an obstacle.")
                 break
 
