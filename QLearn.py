@@ -142,33 +142,33 @@ def main():
     if mode == 't':
         # Training loop
         for episode in range(num_episodes):
-            world.reset()
-            world.print_world()
+            environment.reset()
+            environment.print_world()
             print("\n")
 
             total_reward = 0
-            while not world.done:
-                state = world.get_state()
+            while not environment.done:
+                state = environment.get_state()
                 print("train state: ", state)
                 action = agent.choose_action(state)
                 print(action)
-                world.move_agent(ACTIONS[action])
+                environment.move_agent(ACTIONS[action])
 
                 # Grid.tick
-                world.tick()
+                environment.tick()
 
-                print("PPPPPPPPOS: ", world.agent_pos)
+                print("PPPPPPPPOS: ", environment.agent_pos)
                 print("\n")
-                world.print_world()
+                environment.print_world()
                 print("\n")
-                reward = world.get_reward()
+                reward = environment.get_reward()
                 total_reward += reward
-                next_state = world.get_state()
+                next_state = environment.get_state()
                 agent.update_q_value(state, action, reward, next_state)
-                if world.world[world.get_pos()] == "END":
+                if environment.world[environment.get_pos()] == "END":
                     print("Reached destination!")
                     break
-                elif world.world[world.get_pos()] == 'X' :
+                elif environment.world[environment.get_pos()] == 'X' :
                     print("Game over! Agent hit an obstacle.")
                     break
             print(f"Total Reward: {total_reward}")
