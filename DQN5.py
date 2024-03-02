@@ -4,6 +4,8 @@ import numpy as np
 import random
 from obstacles import On_Off_Obstacle, Moving_Obstacle
 
+# TODO: Implement Double DQN (Have Model A for prediction, use Model B's value and Bellman algo to update Model A's values. Also implement batch logic where instead of only fitting 1 sample and target at a time, save the taget and samples in X, y pair and train it as a batch at the end)
+
 
 DEFAULT_AGNET_POS = (7, 1)  # Put the agent at this spot
 sm = np.array([        # The world
