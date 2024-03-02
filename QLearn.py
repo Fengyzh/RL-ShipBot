@@ -51,11 +51,11 @@ class QLearningAgent:
         q_table_json = {str(key): value for key, value in self.q_table.items()}
 
         # Save the Q-table to a JSON file
-        with open('q_table.json', 'w') as json_file:
+        with open('q_table2.json', 'w') as json_file:
             json.dump(q_table_json, json_file)
 
     def load_q_table(self, file_name):
-        with open('q_table.json', 'r') as json_file:
+        with open('q_table2.json', 'r') as json_file:
             q_table_json = json.load(json_file)
 
         # Convert string keys back to tuples
@@ -79,7 +79,7 @@ class Environment:
         self.world = self.gridWorld.grid
 
     def reset(self):
-        self.agent_pos = (0, 0)
+        self.agent_pos = (10, 10)
 
     def is_valid_move(self, pos):
         return 0 <= pos[0] < len(self.world) and 0 <= pos[1] < len(self.world[0]) and self.world[pos[0], pos[1]] != 'X'
@@ -99,7 +99,7 @@ class Environment:
 
         if 0 <= new_pos[0] < len(self.world) and 0 <= new_pos[1] < len(self.world[0]):
             # Move agent
-            if self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'END':
+            if self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'E':
                 self.agent_pos = new_pos  # Game over if agent hits obstacle
                 self.done = True
             else:
@@ -113,12 +113,12 @@ class Environment:
         return env_to_vision(self.world, self.agent_pos, True)
 
     def get_reward(self):
-        if self.world[self.agent_pos[0], self.agent_pos[1]] == 'END':
-            return 100
+        if self.world[self.agent_pos[0], self.agent_pos[1]] == 'E':
+            return 24
         elif self.world[self.agent_pos[0], self.agent_pos[1]] == 'X':
-            return -100  # Game over if agent hits obstacle
+            return self.agent_pos[0]+self.agent_pos[1]-24  # Game over if agent hits obstacle
         else:
-            return -1
+            return 0.001
 
 
     def print_world(self):
@@ -165,7 +165,7 @@ def main():
                 total_reward += reward
                 next_state = environment.get_state()
                 agent.update_q_value(state, action, reward, next_state)
-                if environment.world[environment.get_pos()] == "END":
+                if environment.world[environment.get_pos()] == "E":
                     print("Reached destination!")
                     break
                 elif environment.world[environment.get_pos()] == 'X' :

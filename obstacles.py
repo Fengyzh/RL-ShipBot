@@ -70,12 +70,11 @@ class Moving_Obstacle:
         
 
         if self.end < 0:
-            if 0 <= self.x < len(self.env) and 0 <= self.y < len(self.env[0]) and self.env[self.x, self.y] != 'X':
+            if 0 <= self.x < len(self.env) and 0 <= self.y < len(self.env[0]) and self.env[self.x, self.y] != 'X' and self.env[self.x, self.y] != 'E':
                 self.env[self.x, self.y] = 'X'
                 self.env[temp[0], temp[1]] = '~'
             else:
                 self.stop = True
-            
         elif self.counter < self.end:
             self.env[self.x, self.y] = 'X'
         else:
