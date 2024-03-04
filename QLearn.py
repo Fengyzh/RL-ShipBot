@@ -15,9 +15,10 @@ ACTIONS = ['up', 'down', 'left', 'right']
 # Refact out world_size
 # State should be 0-9 representing the surrrounding spaces
 class QLearningAgent:
-    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.2):
+    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.1):
         self.world_size = world_size
         self.q_table = {}
+        self.other_q_table = {}
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.exploration_rate = exploration_rate
@@ -43,23 +44,39 @@ class QLearningAgent:
             temporal_difference = reward - old_q_value
             self.q_table[state][action] += self.learning_rate * temporal_difference
         else:
+            if next_state not in self.q_table:
+                self.q_table[next_state] = [0] * len(ACTIONS)
+
+            if next_state not in self.other_q_table:
+                self.other_q_table[next_state] = [0] * len(ACTIONS)
+
+            if random.random() < 0.5:
+                q_table_to_use = self.q_table
+                other_q_table = self.other_q_table
+            else:
+                q_table_to_use = self.other_q_table
+                other_q_table = self.q_table
+
+            best_action_next_state = np.argmax(q_table_to_use[next_state])
             old_q_value = self.q_table[state][action]
             temporal_difference = reward + self.discount_factor * np.max(self.q_table[state]) - old_q_value
             self.q_table[state][action] += self.learning_rate * temporal_difference
 
     def save_q_table(self, file_name):
         q_table_json = {str(key): value for key, value in self.q_table.items()}
+        q_table_json2 = {str(key): value for key, value in self.other_q_table.items()}
 
         # Save the Q-table to a JSON file
-        with open('q_table2.json', 'w') as json_file:
+        with open(file_name, 'w') as json_file:
             json.dump(q_table_json, json_file)
 
     def load_q_table(self, file_name):
-        with open('q_table2.json', 'r') as json_file:
+        with open(file_name, 'r') as json_file:
             q_table_json = json.load(json_file)
 
         # Convert string keys back to tuples
         self.q_table = {eval(key): value for key, value in q_table_json.items()}
+        self.other_q_table = {eval(key): value for key, value in q_table_json.items()}
 
 
 class Environment:
@@ -68,6 +85,7 @@ class Environment:
         self.agent_pos = (0,0)
         self.destination_pos = (world_size - 1, world_size - 1)
         self.done = False
+        self.max_move_size = 1000
 
         # Builds Map
         self.gridWorld = GridWorld(self.world_size, self.world_size)
@@ -79,7 +97,8 @@ class Environment:
         self.world = self.gridWorld.grid
 
     def reset(self):
-        self.agent_pos = (10, 10)
+        self.agent_pos = (0, 0)
+        self.done = False
 
     def is_valid_move(self, pos):
         return 0 <= pos[0] < len(self.world) and 0 <= pos[1] < len(self.world[0]) and self.world[pos[0], pos[1]] != 'X'
@@ -96,10 +115,11 @@ class Environment:
             new_pos = (self.agent_pos[0], self.agent_pos[1] + 1)
 
         self.world[self.agent_pos] = '~'
+        self.max_move_size -= 1
 
         if 0 <= new_pos[0] < len(self.world) and 0 <= new_pos[1] < len(self.world[0]):
             # Move agent
-            if self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'E':
+            if self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'E' or self.max_move_size == 0:
                 self.agent_pos = new_pos  # Game over if agent hits obstacle
                 self.done = True
             else:
@@ -114,11 +134,11 @@ class Environment:
 
     def get_reward(self):
         if self.world[self.agent_pos[0], self.agent_pos[1]] == 'E':
-            return 24
+            return 1000
         elif self.world[self.agent_pos[0], self.agent_pos[1]] == 'X':
-            return self.agent_pos[0]+self.agent_pos[1]-24  # Game over if agent hits obstacle
+            return -1000  # Game over if agent hits obstacle
         else:
-            return 0.001
+            return (12-self.agent_pos[0])*-1 + (12-self.agent_pos[1])*-1 
 
 
     def print_world(self):
@@ -130,11 +150,14 @@ class Environment:
 def main():
     # Define parameters
     world_size = 12
-    num_episodes = 1
+    num_episodes = 1000
 
     # Initialize grid environment and agent
     environment = Environment(world_size)
     agent = QLearningAgent(world_size)
+
+    total_wins = 0
+    total_loss = 0
 
     # User input
     mode = input("Choose mode (t/p): ")
@@ -167,18 +190,23 @@ def main():
                 agent.update_q_value(state, action, reward, next_state)
                 if environment.world[environment.get_pos()] == "E":
                     print("Reached destination!")
+                    total_wins += 1
                     break
                 elif environment.world[environment.get_pos()] == 'X' :
                     print("Game over! Agent hit an obstacle.")
+                    total_loss += 1
                     break
             print(f"Total Reward: {total_reward}")
 
+        print(f"Total Wins: {total_wins}")
+        print(f"Total Losses: {total_loss}")
+
         # Save Q-table
-        agent.save_q_table("q_tableq.json")
+        agent.save_q_table("q_table2.json")
 
     elif mode == 'p':
         # Load Q-table
-        agent.load_q_table("q_tableq.json")
+        agent.load_q_table("q_table2.json")
 
         # Test loop
         environment.reset()
