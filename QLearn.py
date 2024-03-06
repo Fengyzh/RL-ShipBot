@@ -27,6 +27,10 @@ class QLearningAgent:
     def choose_action(self, state):
         #print("Q: ", self.q_table)
         print("state: ", state)
+        print("Q table: ", self.q_table)
+
+        if (state not in self.other_q_table):
+            self.other_q_table[state] = [0,0,0,0]
         if (state not in self.q_table):
             self.q_table[state] = [0,0,0,0]
             return random.choice(range(len(ACTIONS)))
@@ -38,7 +42,6 @@ class QLearningAgent:
     def update_q_value(self, state, action, reward, next_state):
         print(state, action)
         print(self.q_table)
-        self.other_q_table = self.q_table.copy()
 
         if next_state is None:
             # Handle case when next_state is None (agent hits obstacle)
@@ -48,7 +51,9 @@ class QLearningAgent:
         else:
             if next_state not in self.q_table:
                 self.q_table[next_state] = [0] * len(ACTIONS)
+            if next_state not in self.other_q_table:
                 self.other_q_table[next_state] = [0] * len(ACTIONS)
+
 
             if random.random() < 0.5:
                 q_table_to_use = self.q_table
@@ -56,6 +61,8 @@ class QLearningAgent:
             else:
                 q_table_to_use = self.other_q_table
                 other_q_table = self.q_table
+
+            print("bbbb: ", next_state, q_table_to_use)
 
             best_action_next_state = np.argmax(q_table_to_use[next_state])
             old_q_value = q_table_to_use[state][action]
@@ -163,6 +170,8 @@ def main():
             # Initialize grid environment and agent
             environment = Environment(world_size)
             agent = QLearningAgent(world_size)
+            agent.other_q_table = agent.q_table.copy()
+
 
             for episode in range(num_episodes):
                 environment.reset()
