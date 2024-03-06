@@ -13,7 +13,6 @@ class GridWorld:
         self.grid = np.full((self.width, self.length), '~')
 
     def generate_grid_world(self, onOffObstacles, movingObstacles):
-        
         # Place the destination at the bottom-right corner
         self.grid[self.width-1, self.length-1] = 'END'
         
