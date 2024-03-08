@@ -5,17 +5,21 @@ import random
 from obstacles import On_Off_Obstacle, Moving_Obstacle
 from metric import Metrics
 from grid import GridWorld
+from util import encourgement
 
 
 # TODO: Implement Double DQN (Have Model A for prediction, use Model B's value and Bellman algo to update Model A's values. Also implement batch logic where instead of only fitting 1 sample and target at a time, save the taget and samples in X, y pair and train it as a batch at the end)
 
 
-DEFAULT_AGNET_POS = (0, 0)  # Put the agent at this spot
+  # Put the agent at this spot
+DEFAULT_AGNET_POS = (10, 10)
 DEFAULT_DES_POS = (11,11)
-MAX_STEP = 1000
+MAX_STEP = 100
 
 gridMap = GridWorld()
 gridMap.generate_grid_world()
+gridMap.set_start_pos(DEFAULT_AGNET_POS[0], DEFAULT_AGNET_POS[1])
+
 
 
 sm = np.array([        # The world
@@ -39,7 +43,7 @@ class DQNAgent:
         self.action_size = action_size  # Action size, we have up down left right so 4 actions
         self.memory = deque(maxlen=2000)    # Memory size for experience replay
         self.gamma = 0.95  # discount rate
-        self.epsilon = 0.7  # exploration rate
+        self.epsilon = 0.3  # exploration rate
         self.learning_rate = 0.001  # Lr
         self.model = self._build_model()    # Build the NN
         self.target_model = self._build_model()
@@ -123,6 +127,7 @@ class Environment:
         self.state_size = np.prod(self.grid.shape)
         self.grid_mapping = {' ': 0, 'X': 1, 'END': 2, 'A': 3, '~': 0, 'E':2}  # Mapping for grid elements
         self.stepCount = 0
+        self.temp_agent_pos = DEFAULT_AGNET_POS
 
     # Because the model can't take in strings, we have to convert the map to ints
     # This function converts the map back to strings for visual purpose
@@ -145,6 +150,7 @@ class Environment:
         elif action == 3:  # Move right
             new_position = (self.agent_position[0], self.agent_position[1] + 1)
 
+        self.temp_agent_pos = self.agent_position
         if self._is_valid_move(new_position):
             self.grid[self.agent_position] = '~'
             self.agent_position = new_position
@@ -175,7 +181,7 @@ class Environment:
         elif self.grid[self.agent_position] == "X":
             return -100  # Penalty for hitting an obstacle
         else:
-            return -1  # Penalty for each move
+            return encourgement(self.agent_position, self.temp_agent_pos, self.destination) # Reward for each move
 
     def _is_done(self):
         return self.grid[self.agent_position] == "E" or self.grid[self.agent_position] == "X"
@@ -186,6 +192,7 @@ class Environment:
         print(rendered_grid)
 
 
+
 def train():
     EPISODES = 5
     BATCH_SIZE = 4
@@ -194,6 +201,8 @@ def train():
     state_size = env.state_size
     action_size = 4
     agent = DQNAgent(state_size, action_size)
+    m = Metrics()
+
 
     try:
         agent.load("trained_model.h5")
@@ -204,7 +213,10 @@ def train():
     for episode in range(EPISODES):
         state = env.preprocess_state()  # Initial state
         total_reward = 0
-        done = False
+        done = False        
+        step = 0
+
+        print(env.grid)
 
         while not done:
             action = agent.pick_action(state)
@@ -217,11 +229,14 @@ def train():
                 agent.replay(BATCH_SIZE)
             #agent.train(state, action, reward, next_state)
             state = next_state
+            step += 1
 
+        m.recordIteration(total_reward, True if total_reward > 0 else False, step)
         print(f"Episode: {episode + 1}/{EPISODES}, Total Reward: {total_reward}")
         env.reset()
 
     agent.save("trained_model.h5")
+    m.printMetrics()
 
 
 def play():
@@ -268,7 +283,7 @@ def play():
             print("\n")
             env.render()
             step += 1
-        m.recordIteration(total_reward, True if total_reward > 0 else False, step)
+        m.recordIteration(total_reward, True if env.agent_position == env.destination else False, step)
         print(f"Total Reward: {total_reward}")
         env.reset()
     m.printMetrics()

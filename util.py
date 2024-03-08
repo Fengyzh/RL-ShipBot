@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 testM = np.array([
     [" ", "X", " "],
@@ -84,3 +85,13 @@ def state_to_index(row, col, num_cols):
 
 
 #env_to_vision(testM2, testM2Pos)
+
+def encourgement(agent_pos, old_agent_pos, destination, positive_reward=0, negative_reward=-1):
+    new_dst = math.sqrt((destination[0] - agent_pos[0])**2 + (destination[1] - agent_pos[1])**2)
+    old_dst = math.sqrt((destination[0] - old_agent_pos[0])**2 + (destination[1] - old_agent_pos[1])**2)
+
+    if new_dst < old_dst:
+        return positive_reward
+    else:
+        return negative_reward
+
