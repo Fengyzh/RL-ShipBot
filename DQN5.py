@@ -3,11 +3,21 @@ from collections import deque
 import numpy as np
 import random
 from obstacles import On_Off_Obstacle, Moving_Obstacle
+from metric import Metrics
+from grid import GridWorld
+
 
 # TODO: Implement Double DQN (Have Model A for prediction, use Model B's value and Bellman algo to update Model A's values. Also implement batch logic where instead of only fitting 1 sample and target at a time, save the taget and samples in X, y pair and train it as a batch at the end)
 
 
-DEFAULT_AGNET_POS = (7, 1)  # Put the agent at this spot
+DEFAULT_AGNET_POS = (0, 0)  # Put the agent at this spot
+DEFAULT_DES_POS = (11,11)
+MAX_STEP = 1000
+
+gridMap = GridWorld()
+gridMap.generate_grid_world()
+
+
 sm = np.array([        # The world
     [" ", " ", "X", " "],
     [" ", " ", "X", " "],
@@ -107,11 +117,12 @@ class DQNAgent:
 
 class Environment:
     def __init__(self):
-        self.grid = sm.copy()
+        self.grid = gridMap.grid
         self.agent_position = DEFAULT_AGNET_POS  # Starting position of the agent
-        self.destination = (7, 3)  # Destination position
-        self.state_size = np.prod(sm.shape)
-        self.grid_mapping = {' ': 0, 'X': 1, 'END': 2, 'A': 3, '~': 0}  # Mapping for grid elements
+        self.destination = DEFAULT_DES_POS  # Destination position
+        self.state_size = np.prod(self.grid.shape)
+        self.grid_mapping = {' ': 0, 'X': 1, 'END': 2, 'A': 3, '~': 0, 'E':2}  # Mapping for grid elements
+        self.stepCount = 0
 
     # Because the model can't take in strings, we have to convert the map to ints
     # This function converts the map back to strings for visual purpose
@@ -122,7 +133,7 @@ class Environment:
     # Reset Agent pos
     def reset(self):
         self.agent_position = DEFAULT_AGNET_POS
-        self.grid = sm.copy()
+        self.grid = self.grid.copy()
 
     def step(self, action):
         if action == 0:  # Move up
@@ -135,14 +146,20 @@ class Environment:
             new_position = (self.agent_position[0], self.agent_position[1] + 1)
 
         if self._is_valid_move(new_position):
-            self.grid[self.agent_position] = ' '
+            self.grid[self.agent_position] = '~'
             self.agent_position = new_position
-            if (self.grid[self.agent_position] != 'END' and self.grid[self.agent_position] != 'X'):
+            if (self.grid[self.agent_position] != 'E' and self.grid[self.agent_position] != 'X'):
                 self.grid[self.agent_position] = 'A'
         
         
         reward = self._get_reward()
         done = self._is_done()
+
+        if self.stepCount >= MAX_STEP:
+            reward = -100
+            done = True
+        
+        self.stepCount += 1
 
         return reward, done
 
@@ -153,7 +170,7 @@ class Environment:
         return False
 
     def _get_reward(self):
-        if self.grid[self.agent_position] == "END":
+        if self.grid[self.agent_position] == "E":
             return 100  # Reward for reaching the destination
         elif self.grid[self.agent_position] == "X":
             return -100  # Penalty for hitting an obstacle
@@ -161,7 +178,7 @@ class Environment:
             return -1  # Penalty for each move
 
     def _is_done(self):
-        return self.grid[self.agent_position] == "END" or self.grid[self.agent_position] == "X"
+        return self.grid[self.agent_position] == "E" or self.grid[self.agent_position] == "X"
 
     def render(self):
         rendered_grid = np.copy(self.grid)
@@ -212,6 +229,7 @@ def play():
     state_size = env.state_size
     action_size = 4
     agent = DQNAgent(state_size, action_size)
+    m = Metrics()
 
     try:
         agent.load("trained_model.h5")
@@ -225,8 +243,8 @@ def play():
         print("-------------- Start Iter ------------------")
 
         #o = On_Off_Obstacle(env.grid, 2, 3)
-        o = Moving_Obstacle(env.grid, 2, 3)
-        o.plot()
+        #o = Moving_Obstacle(env.grid, 2, 3)
+        #o.plot()
 
         env.grid[env.agent_position] = 'A'
         print(env.grid)
@@ -234,23 +252,26 @@ def play():
         state = env.preprocess_state()  # Initial state
         total_reward = 0
         done = False
+        step = 0
 
         while not done:
             action = agent.pick_action(state)
             reward, done = env.step(action)
             total_reward += reward
-            o.tick()
+            #o.tick()
             state = env.preprocess_state()
-            print(env.agent_position, o.get_obs_pos())
-            if env.agent_position == o.get_obs_pos():
-                done = True
-                total_reward -= 100
+            #print(env.agent_position, o.get_obs_pos())
+            #if env.agent_position == o.get_obs_pos():
+                #done = True
+                #total_reward -= 100
 
             print("\n")
             env.render()
-
+            step += 1
+        m.recordIteration(total_reward, True if total_reward > 0 else False, step)
         print(f"Total Reward: {total_reward}")
         env.reset()
+    m.printMetrics()
 
 
 usr = input("Train/Play (Enter: t or p): ")
