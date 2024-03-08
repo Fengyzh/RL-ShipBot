@@ -13,7 +13,7 @@ class GridWorld:
         self.goal = (self.width-1, self.length-1)
         self.grid = np.full((self.width, self.length), '~')
 
-    def generate_grid_world(self, onOffObstacles, movingObstacles):
+    def generate_grid_world(self, onOffObstacles=[], movingObstacles=[]):
         # Place the destination at the bottom-right corner
         self.grid[self.goal[0], self.goal[1]] = 'E'
         
