@@ -143,7 +143,7 @@ class Environment:
         elif self.world[self.agent_pos[0], self.agent_pos[1]] == 'X':
             return -1000  # Game over if agent hits obstacle
         else:
-            return (12-self.agent_pos[0])*-1 + (12-self.agent_pos[1])*-1 
+            return (self.gridWorld.goal[0]-self.agent_pos[0])*-1 + (self.gridWorld.goal[1]-self.agent_pos[1])*-1 
 
 
     def print_world(self):
@@ -156,7 +156,7 @@ def main():
     # Define parameters
     world_size = 12
     num_episodes = 1000
-    num_iterations = 5
+    num_iterations = 50
 
     total_wins = 0
     total_loss = 0

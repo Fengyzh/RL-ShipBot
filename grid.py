@@ -10,11 +10,12 @@ class GridWorld:
         self.ob_chance = obstacle_chance
         self.dynamic_obstacles = []
         self.dynamic_obs  = {}
+        self.goal = (self.width-1, self.length-1)
         self.grid = np.full((self.width, self.length), '~')
 
     def generate_grid_world(self, onOffObstacles, movingObstacles):
         # Place the destination at the bottom-right corner
-        self.grid[self.width-1, self.length-1] = 'END'
+        self.grid[self.goal[0], self.goal[1]] = 'E'
         
         # Place an obstacle at a random position
         for i in range(10):
@@ -58,6 +59,13 @@ class GridWorld:
                 temp.plot()
                 self.dynamic_obs[temp.get_obs_pos] = temp
 
+    def set_start_pos(self, x, y):
+        if self.conflict_of_position_check(x,y):
+            self.dynamic_obs.pop((y,x))
+            self.grid[x,y] = "A"
+        else:
+            self.grid[x,y] = "A"
+
     def conflict_of_position_check(self, x, y):
         if self.dynamic_obs.get((y,x)) is None:
             return False
@@ -75,6 +83,7 @@ if __name__ == "__main__":
     # Generate the grid world
     grid_world = GridWorld()
     grid_world.generate_grid_world(True, True)
+    grid_world.set_start_pos(2,2)
 
     for i in range(5):
         print(grid_world.grid)
