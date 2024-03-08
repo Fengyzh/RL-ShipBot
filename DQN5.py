@@ -5,7 +5,7 @@ import random
 from obstacles import On_Off_Obstacle, Moving_Obstacle
 from metric import Metrics
 from grid import GridWorld
-from util import encourgement
+from util import encouragement
 
 
 # TODO: Implement Double DQN (Have Model A for prediction, use Model B's value and Bellman algo to update Model A's values. Also implement batch logic where instead of only fitting 1 sample and target at a time, save the taget and samples in X, y pair and train it as a batch at the end)
@@ -181,7 +181,7 @@ class Environment:
         elif self.grid[self.agent_position] == "X":
             return -100  # Penalty for hitting an obstacle
         else:
-            return encourgement(self.agent_position, self.temp_agent_pos, self.destination) # Reward for each move
+            return encouragement(self.agent_position, self.temp_agent_pos, self.destination, True, self.stepCount) # Reward for each move
 
     def _is_done(self):
         return self.grid[self.agent_position] == "E" or self.grid[self.agent_position] == "X"
