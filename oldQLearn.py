@@ -3,6 +3,7 @@ import random
 import json
 from util import env_to_vision
 from grid import GridWorld
+from metric import Metrics
 
 # Define constants
 EMPTY = 0
@@ -136,7 +137,7 @@ def main():
     # Define parameters
     world_size = 8
     num_episodes = 500
-    num_iterations = 50
+    num_iterations = 100
 
     # Initialize grid environment and agent
     environment = Environment(world_size)
@@ -173,7 +174,7 @@ def main():
                     # Grid.tick
                     environment.tick()
 
-                    print("PPPPPPPPOS: ", environment.agent_pos)
+                    #print("PPPPPPPPOS: ", environment.agent_pos)
                     print("\n")
                     environment.print_world()
                     print("\n")
@@ -197,28 +198,46 @@ def main():
         agent.save_q_table("q_tableq.json")
 
     elif mode == 'p':
+
+        num_episodes = 5
+
+        # Initialize grid environment and agent
+        environment = Environment(world_size)
+        agent = QLearningAgent(world_size)
+        m = Metrics()
+
         # Load Q-table
         agent.load_q_table("q_tableq.json")
 
         # Test loop
         environment.reset()
 
-        while True:
-            state = environment.get_state()
-            action = agent.choose_action(state)
-            environment.move_agent(ACTIONS[action])
+        for episode in range(num_episodes):
+            # Test loop
+            environment.reset()
 
-            # Grid.tick
-            environment.tick()
+            total_reward = 0
+            step = 0
 
-            environment.print_world()
-            print()
-            if environment.world[environment.get_pos()] == "END":
-                print("Reached destination!")
-                break
-            elif environment.world[environment.get_pos()] == 'X' :
-                print("Game over! Agent hit an obstacle.")
-                break
+            while True:
+                state = environment.get_state()
+                action = agent.choose_action(state)
+                environment.move_agent(ACTIONS[action])
+
+                # Grid.tick
+                environment.tick()
+
+                environment.print_world()
+                print()
+                if environment.world[environment.get_pos()] == "END":
+                    print("Reached destination!")
+                    break
+                elif environment.world[environment.get_pos()] == 'X' :
+                    print("Game over! Agent hit an obstacle.")
+                    break
+
+            m.recordIteration(total_reward, True if total_reward > 0 else False, step)
+            print(f"Total Reward: {total_reward}")
 
     else:
         print("Invalid mode. Please choose 'train' or 'play'.")
