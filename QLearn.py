@@ -130,7 +130,6 @@ class Environment:
         if 0 <= new_pos[0] < len(self.world) and 0 <= new_pos[1] < len(self.world[0]) or self.max_move_size == 0:
             # Move agent
             if self.max_move_size == 0:
-                self.agent_pos = new_pos  # Game over if agent hits max move limit
                 self.done = True
             elif self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'E':
                 self.agent_pos = new_pos  # Game over if agent hits obstacle
@@ -163,7 +162,7 @@ class Environment:
 def main():
     # Define parameters
     world_size = 8
-    num_episodes = 50
+    num_episodes = 150
     num_iterations = 100
 
     total_wins = 0
@@ -223,7 +222,7 @@ def main():
 
     elif mode == 'p':
 
-        num_episodes = 1000
+        num_episodes = 200
 
         # Initialize grid environment and agent
         environment = Environment(world_size)
@@ -235,7 +234,7 @@ def main():
 
         for episode in range(num_episodes):
             # Test loop
-            environment.gridWorld.static_map_test(3)
+            environment.gridWorld.static_map_test(1)
             environment.reset()
 
             total_reward = 0
