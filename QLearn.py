@@ -157,9 +157,9 @@ class Environment:
 
 def main():
     # Define parameters
-    world_size = 12
+    world_size = 8
     num_episodes = 500
-    num_iterations = 20
+    num_iterations = 50
 
     total_wins = 0
     total_loss = 0

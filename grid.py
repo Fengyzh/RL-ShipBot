@@ -79,7 +79,7 @@ class GridWorld:
         self.grid[self.goal[0], self.goal[1]] = 'E'
         
         # Place an obstacle at a random position
-        for i in range(10):
+        for i in range(6):
             obstacle_x, obstacle_y = random.randint(0, self.width-1), random.randint(0, self.length-1)
             if (random.randint(0, 9) < self.ob_chance*10):
                 # Make sure the obstacle is not placed at the top-left corner or the bottom-right corner
@@ -96,7 +96,7 @@ class GridWorld:
 
     def add_on_off_obstacles(self):
         # Place an obstacle at a random position
-        for i in range(10):
+        for i in range(6):
             obstacle_x, obstacle_y = random.randint(0, self.width-1), random.randint(0, self.length-1)
             if (random.randint(0, 9) < 9):
                 # Make sure the obstacle is not placed at the top-left corner or the bottom-right corner or conflicting with another object's spawn position
@@ -109,7 +109,7 @@ class GridWorld:
 
     def add_moving_obstacles(self):
         # Place an obstacle at a random position
-        for i in range(8):
+        for i in range(6):
             obstacle_x, obstacle_y = random.randint(0, self.width-1), random.randint(0, self.length-1)
             if (random.randint(0, 9) < 9):
                 # Make sure the obstacle is not placed at the top-left corner or the bottom-right corner or conflicting with another object's spawn position
