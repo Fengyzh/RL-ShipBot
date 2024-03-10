@@ -3,7 +3,6 @@ import random
 import json
 from util import env_to_vision
 from grid import GridWorld
-from metric import Metrics
 
 # Define constants
 EMPTY = 0
@@ -16,10 +15,9 @@ ACTIONS = ['up', 'down', 'left', 'right']
 # Refact out world_size
 # State should be 0-9 representing the surrrounding spaces
 class QLearningAgent:
-    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.1):
+    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.8):
         self.world_size = world_size
         self.q_table = {}
-        self.other_q_table = {}
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.exploration_rate = exploration_rate
@@ -27,11 +25,7 @@ class QLearningAgent:
     # Refact out mode
     def choose_action(self, state):
         #print("Q: ", self.q_table)
-        #print("state: ", state)
-        #print("Q table: ", self.q_table)
-
-        if (state not in self.other_q_table):
-            self.other_q_table[state] = [0,0,0,0]
+        print("state: ", state)
         if (state not in self.q_table):
             self.q_table[state] = [0,0,0,0]
             return random.choice(range(len(ACTIONS)))
@@ -41,44 +35,27 @@ class QLearningAgent:
             return np.argmax(self.q_table[state])
 
     def update_q_value(self, state, action, reward, next_state):
-        #print(state, action)
-        #print(self.q_table)
-
+        print(state, action)
+        print(self.q_table)
         if next_state is None:
             # Handle case when next_state is None (agent hits obstacle)
             old_q_value = self.q_table[state][action]
             temporal_difference = reward - old_q_value
             self.q_table[state][action] += self.learning_rate * temporal_difference
         else:
-            if next_state not in self.q_table:
-                self.q_table[next_state] = [0] * len(ACTIONS)
-            if next_state not in self.other_q_table:
-                self.other_q_table[next_state] = [0] * len(ACTIONS)
-
-
-            if random.random() < 0.5:
-                q_table_to_use = self.q_table
-                other_q_table = self.other_q_table
-            else:
-                q_table_to_use = self.other_q_table
-                other_q_table = self.q_table
-
-            #print("bbbb: ", next_state, q_table_to_use)
-
-            best_action_next_state = np.argmax(q_table_to_use[next_state])
-            old_q_value = q_table_to_use[state][action]
-            temporal_difference = reward + self.discount_factor * other_q_table[state][best_action_next_state] - old_q_value
-            q_table_to_use[state][action] += self.learning_rate * temporal_difference
+            old_q_value = self.q_table[state][action]
+            temporal_difference = reward + self.discount_factor * np.max(self.q_table[state]) - old_q_value
+            self.q_table[state][action] += self.learning_rate * temporal_difference
 
     def save_q_table(self, file_name):
         q_table_json = {str(key): value for key, value in self.q_table.items()}
 
         # Save the Q-table to a JSON file
-        with open(file_name, 'w') as json_file:
+        with open('q_table2.json', 'w') as json_file:
             json.dump(q_table_json, json_file)
 
     def load_q_table(self, file_name):
-        with open(file_name, 'r') as json_file:
+        with open('q_table2.json', 'r') as json_file:
             q_table_json = json.load(json_file)
 
         # Convert string keys back to tuples
@@ -146,7 +123,7 @@ class Environment:
         elif self.world[self.agent_pos[0], self.agent_pos[1]] == 'X':
             return -1000  # Game over if agent hits obstacle
         else:
-            return (self.gridWorld.goal[0]-self.agent_pos[0])*-1 + (self.gridWorld.goal[1]-self.agent_pos[1])*-1 
+            return (self.gridWorld.goal[0]-self.agent_pos[0])*-1 + (self.gridWorld.goal[1]-self.agent_pos[1])*-1
 
 
     def print_world(self):
@@ -160,6 +137,10 @@ def main():
     world_size = 12
     num_episodes = 500
     num_iterations = 20
+
+    # Initialize grid environment and agent
+    environment = Environment(world_size)
+    agent = QLearningAgent(world_size)
 
     total_wins = 0
     total_loss = 0
@@ -175,7 +156,7 @@ def main():
             agent = QLearningAgent(world_size)
             agent.other_q_table = agent.q_table.copy()
 
-
+            # Training loop
             for episode in range(num_episodes):
                 environment.reset()
                 environment.print_world()
@@ -192,8 +173,8 @@ def main():
                     # Grid.tick
                     environment.tick()
 
-                    #print("PPPPPPPPOS: ", environment.agent_pos)
-                    #print("\n")
+                    print("PPPPPPPPOS: ", environment.agent_pos)
+                    print("\n")
                     environment.print_world()
                     print("\n")
                     reward = environment.get_reward()
@@ -209,55 +190,35 @@ def main():
                         total_loss += 1
                         break
                 print(f"Total Reward: {total_reward}")
-
             print(f"Total Wins: {total_wins}")
             print(f"Total Losses: {total_loss}")
 
-            # Save Q-table
-            agent.save_q_table("q_table2.json")
+        # Save Q-table
+        agent.save_q_table("q_tableq.json")
 
     elif mode == 'p':
-
-        num_episodes = 5
-
-        # Initialize grid environment and agent
-        environment = Environment(world_size)
-        agent = QLearningAgent(world_size)
-        m = Metrics()
-
         # Load Q-table
-        agent.load_q_table("q_table2.json")
+        agent.load_q_table("q_tableq.json")
 
-        for episode in range(num_episodes):
-            # Test loop
-            environment.reset()
+        # Test loop
+        environment.reset()
 
-            total_reward = 0
-            step = 0
+        while True:
+            state = environment.get_state()
+            action = agent.choose_action(state)
+            environment.move_agent(ACTIONS[action])
 
-            while True:
-                state = environment.get_state()
-                action = agent.choose_action(state)
-                environment.move_agent(ACTIONS[action])
+            # Grid.tick
+            environment.tick()
 
-                # Grid.tick
-                environment.tick()
-
-                #environment.print_world()
-                #print()
-
-                reward = environment.get_reward()
-                total_reward += reward
-                step += 1
-
-                if environment.world[environment.get_pos()] == "E":
-                    print("Reached destination!")
-                    break
-                elif environment.world[environment.get_pos()] == 'X' :
-                    print("Game over! Agent hit an obstacle.")
-                    break
-            m.recordIteration(total_reward, True if total_reward > 0 else False, step)
-            print(f"Total Reward: {total_reward}")
+            environment.print_world()
+            print()
+            if environment.world[environment.get_pos()] == "END":
+                print("Reached destination!")
+                break
+            elif environment.world[environment.get_pos()] == 'X' :
+                print("Game over! Agent hit an obstacle.")
+                break
 
     else:
         print("Invalid mode. Please choose 'train' or 'play'.")

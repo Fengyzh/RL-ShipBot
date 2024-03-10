@@ -22,6 +22,8 @@ class On_Off_Obstacle:
     def tick(self):
         self.counter += 1
         self.plot()
+        if self.counter > (self.end*2):
+            self.counter = 0
 
     def plot(self):
         if self.counter < self.end:

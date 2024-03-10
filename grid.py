@@ -13,6 +13,67 @@ class GridWorld:
         self.goal = (self.width-1, self.length-1)
         self.grid = np.full((self.width, self.length), '~')
 
+    def static_map_test(self, number):
+        if number == 1:
+            self.grid = np.array([        # The world
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "E",]
+            ])
+        if number == 2:
+            self.grid = np.array([        # The world
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "X", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "X", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "X", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "X",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "X", "~", "E",]
+            ])
+
+        if number == 3:
+            self.grid = np.array([        # The world
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "X", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "X", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "X", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "X",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~", "~",],
+                ["~", "~", "~", "~", "~", "~", "~", "~", "~", "X", "~", "E",]
+            ])
+
+            coords_x = [5,3,10,11,10]
+            coords_y = [5,9,5,0,8]
+            # Place an obstacle at a random position
+            for i in range(5):
+                obstacle_x, obstacle_y = coords_x[i], coords_y[i]
+                # Make sure the obstacle is not placed at the top-left corner or the bottom-right corner or conflicting with another object's spawn position
+                while (obstacle_x == 0 and obstacle_y == 0) or (obstacle_x == self.width-1 and obstacle_y == self.length-1) or self.conflict_of_position_check(obstacle_x, obstacle_y):
+                    obstacle_x, obstacle_y = random.randint(0, self.width-1), random.randint(0, self.length-1)
+
+                temp = On_Off_Obstacle(self.grid, obstacle_x, obstacle_y, random.randint(3, 5))
+                temp.plot()
+                self.dynamic_obs[(temp.get_obs_pos)] = temp
+
     def generate_grid_world(self, onOffObstacles=[], movingObstacles=[]):
         # Place the destination at the bottom-right corner
         self.grid[self.goal[0], self.goal[1]] = 'E'
@@ -42,7 +103,7 @@ class GridWorld:
                 while (obstacle_x == 0 and obstacle_y == 0) or (obstacle_x == self.width-1 and obstacle_y == self.length-1) or self.conflict_of_position_check(obstacle_x, obstacle_y):
                     obstacle_x, obstacle_y = random.randint(0, self.width-1), random.randint(0, self.length-1)
 
-                temp = On_Off_Obstacle(self.grid, obstacle_x, obstacle_y, random.randint(1, 5))
+                temp = On_Off_Obstacle(self.grid, obstacle_x, obstacle_y, random.randint(3, 5))
                 temp.plot()
                 self.dynamic_obs[(temp.get_obs_pos)] = temp
 
