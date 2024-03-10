@@ -6,13 +6,14 @@ from obstacles import On_Off_Obstacle, Moving_Obstacle
 from metric import Metrics
 from grid import GridWorld
 from util import encouragement
+from util import env_to_vision
 
 
 # TODO: Implement Double DQN (Have Model A for prediction, use Model B's value and Bellman algo to update Model A's values. Also implement batch logic where instead of only fitting 1 sample and target at a time, save the taget and samples in X, y pair and train it as a batch at the end)
 
 
   # Put the agent at this spot
-DEFAULT_AGNET_POS = (8, 8)
+DEFAULT_AGNET_POS = (3, 3)
 DEFAULT_DES_POS = (11,11)
 MAX_STEP = 80
 
@@ -44,7 +45,7 @@ class DQNAgent:
         self.action_size = action_size  # Action size, we have up down left right so 4 actions
         self.memory = deque(maxlen=2000)    # Memory size for experience replay
         self.gamma = 0.99  # discount rate
-        self.epsilon = 0.8  # exploration rate
+        self.epsilon = 0.4  # exploration rate
         self.learning_rate = 0.001  # Lr
         self.model = self._build_model()    # Build the NN
         self.target_model = self._build_model()
@@ -127,9 +128,11 @@ class DQNAgent:
 class Environment:
     def __init__(self):
         self.grid = envMap
+        self.vision_grid = self.grid
         self.agent_position = DEFAULT_AGNET_POS  # Starting position of the agent
         self.destination = DEFAULT_DES_POS  # Destination position
-        self.state_size = np.prod(self.grid.shape)
+        #self.state_size = np.prod(self.grid.shape)
+        self.state_size = 9
         self.grid_mapping = {' ': 0, 'X': 1, 'END': 2, 'A': 3, '~': 0, 'E':2}  # Mapping for grid elements
         self.stepCount = 0
         self.temp_agent_pos = DEFAULT_AGNET_POS
@@ -137,8 +140,10 @@ class Environment:
     # Because the model can't take in strings, we have to convert the map to ints
     # This function converts the map back to strings for visual purpose
     def preprocess_state(self):
-        processed_grid = np.vectorize(self.grid_mapping.get)(self.grid)
-        return processed_grid.flatten().reshape(1, -1)
+        self.vision_grid = self.state_to_vision()
+        # processed_grid = np.vectorize(self.grid_mapping.get)(self.vision_grid)
+        #return processed_grid.flatten().reshape(1, -1)
+        return [self.vision_grid]
 
     # Reset Agent pos
     def reset(self):
@@ -198,6 +203,8 @@ class Environment:
         rendered_grid[self.agent_position] = "A"  # Render agent position
         print(rendered_grid)
 
+    def state_to_vision(self):
+        return env_to_vision(self.grid, self.agent_position, False)
 
 
 def train():
@@ -212,7 +219,7 @@ def train():
 
 
     try:
-        agent.load("trained_model.h5")
+        agent.load("trained_model_env.h5")
         print("Loaded model from disk")
     except:
         print("No pre-trained model found, starting training from scratch.")
@@ -227,6 +234,14 @@ def train():
 
         while not done:
             action = agent.pick_action(state)
+
+            #r = random.randint(0,2)
+
+            #print("\n--------------------------------")
+            #print(state)
+            #print(env.grid)
+            #print("--------------------------------\n")
+
             reward, done = env.step(action)
             total_reward += reward
             next_state = env.preprocess_state()
@@ -243,7 +258,7 @@ def train():
         print(f"Episode: {episode + 1}/{EPISODES}, Total Reward: {total_reward}")
         env.reset()
 
-    agent.save("trained_model.h5")
+    agent.save("trained_model_env.h5")
     m.printMetrics()
 
 
@@ -255,7 +270,7 @@ def play():
     m = Metrics()
 
     try:
-        agent.load("trained_model.h5")
+        agent.load("trained_model_env.h5")
         print("Loaded model from disk")
     except:
         print("No pre-trained model found, starting training from scratch.")

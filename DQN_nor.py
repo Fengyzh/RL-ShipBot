@@ -12,14 +12,13 @@ from util import encouragement
 
 
   # Put the agent at this spot
-DEFAULT_AGNET_POS = (8, 8)
+DEFAULT_AGNET_POS = (7, 7)
 DEFAULT_DES_POS = (11,11)
-MAX_STEP = 80
+MAX_STEP = 100
 
 gridMap = GridWorld()
 gridMap.generate_grid_world()
 gridMap.set_start_pos(DEFAULT_AGNET_POS[0], DEFAULT_AGNET_POS[1])
-envMap = gridMap.grid
 
 
 
@@ -43,12 +42,10 @@ class DQNAgent:
         self.state_size = state_size    # Size of the state (we taking the whole world)
         self.action_size = action_size  # Action size, we have up down left right so 4 actions
         self.memory = deque(maxlen=2000)    # Memory size for experience replay
-        self.gamma = 0.99  # discount rate
-        self.epsilon = 0.8  # exploration rate
+        self.gamma = 0.95  # discount rate
+        self.epsilon = 0.3  # exploration rate
         self.learning_rate = 0.001  # Lr
         self.model = self._build_model()    # Build the NN
-        self.target_model = self._build_model()
-        self.target_model.set_weights(self.model.get_weights())
         self.swap_count = 0
 
     def _build_model(self):
@@ -59,59 +56,18 @@ class DQNAgent:
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
         return model
 
-    # Memory for experience replay
-    def remember(self, state, action, reward, next_state, done):
-        # Add the necessary information to memeory
-        self.memory.append((state, action, reward, next_state, done))
-
     # Pick an action
     def pick_action(self, state):
         # If its smaller than epsilon, choose a random action
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
         # Else, use the model to give you an action
-        act_values = self.model.predict(state, verbose=0)
+        act_values = self.model.predict(state)
         return np.argmax(act_values[0])  # returns action
-
-    # Train with experience replay
-    def replay(self, batch_size):
-        X = []
-        y = []
-        if self.swap_count == SWAP_COUNT:
-            self.model.set_weights(self.target_model.get_weights())
-            self.swap_count = 0
-            #print('--------- MODEL SWAPPED ------------')
-        else:
-            self.swap_count += 1
-
-    # Model A for prediction, use Model B's value and Bellman algo to update Model A's values
-        minibatch = random.sample(self.memory, batch_size) # Sample a batch from memory
-        for state, action, reward, next_state, done in minibatch:
-            target = self.model.predict(state, verbose=0)  # Get the model reading of the current state
-            
-            #print("target: ", target) 
-            if done:    # If the state in the experience is done
-                target[0][action] = reward      # Make the action that it took have the value of the reward
-            else:
-                t = self.model.predict(next_state, verbose=0)[0]   # If its not done, get the next state's Q values
-                target[0][action] = reward + self.gamma * np.amax(t)    # Use bellman algo and put the result in the action it took
-            
-            X.append(state)
-            y.append(target)
-        
-        cur_target = self.target_model.predict(state, verbose=0)
-        cur_target[0][action] = reward + self.gamma * np.amax(cur_target)
-        X.append(state)
-        y.append(cur_target)
-        X = np.array(X)
-        X = X.reshape(X.shape[0], X.shape[2])
-        y = np.array(y)
-        
-        self.target_model.fit(X, y, epochs=1, batch_size=batch_size, verbose=0)  # Train
 
     # A function to just do normal training without expereicen replay
     def train(self, state, action, reward, next_state):
-        target = self.model.predict(state, verbose=0)
+        target = self.model.predict(state)
         t = self.model.predict(next_state)[0]
         target[0][action] = reward + self.gamma * np.amax(t)
         self.model.fit(state, target, epochs=1, verbose=0)
@@ -126,7 +82,7 @@ class DQNAgent:
 
 class Environment:
     def __init__(self):
-        self.grid = envMap
+        self.grid = gridMap.grid
         self.agent_position = DEFAULT_AGNET_POS  # Starting position of the agent
         self.destination = DEFAULT_DES_POS  # Destination position
         self.state_size = np.prod(self.grid.shape)
@@ -143,9 +99,7 @@ class Environment:
     # Reset Agent pos
     def reset(self):
         self.agent_position = DEFAULT_AGNET_POS
-        self.temp_agent_pos = DEFAULT_AGNET_POS
-        self.stepCount = 0
-        self.grid = envMap.copy()
+        self.grid = self.grid.copy()
 
     def step(self, action):
         if action == 0:  # Move up
@@ -188,7 +142,7 @@ class Environment:
         elif self.grid[self.agent_position] == "X":
             return -100  # Penalty for hitting an obstacle
         else:
-            return encouragement(self.agent_position, self.temp_agent_pos, self.destination, False, self.stepCount, 1, -1) # Reward for each move
+            return encouragement(self.agent_position, self.temp_agent_pos, self.destination, False, self.stepCount) # Reward for each move
 
     def _is_done(self):
         return self.grid[self.agent_position] == "E" or self.grid[self.agent_position] == "X"
@@ -201,8 +155,8 @@ class Environment:
 
 
 def train():
-    EPISODES = 50
-    BATCH_SIZE = 8
+    EPISODES = 30
+    BATCH_SIZE = 4
 
     env = Environment()
     state_size = env.state_size
@@ -212,7 +166,7 @@ def train():
 
 
     try:
-        agent.load("trained_model.h5")
+        agent.load("DQN_nor.h5")
         print("Loaded model from disk")
     except:
         print("No pre-trained model found, starting training from scratch.")
@@ -230,20 +184,17 @@ def train():
             reward, done = env.step(action)
             total_reward += reward
             next_state = env.preprocess_state()
-            agent.remember(state, action, reward, next_state, done)
-
-            if len(agent.memory) > BATCH_SIZE:
-                agent.replay(BATCH_SIZE)
+            agent.train(state, action, reward, next_state)
+            
             #agent.train(state, action, reward, next_state)
             state = next_state
             step += 1
-
 
         m.recordIteration(total_reward, True if total_reward > 0 else False, step)
         print(f"Episode: {episode + 1}/{EPISODES}, Total Reward: {total_reward}")
         env.reset()
 
-    agent.save("trained_model.h5")
+    agent.save("DQN_nor.h5")
     m.printMetrics()
 
 
@@ -255,7 +206,7 @@ def play():
     m = Metrics()
 
     try:
-        agent.load("trained_model.h5")
+        agent.load("DQN_nor.h5")
         print("Loaded model from disk")
     except:
         print("No pre-trained model found, starting training from scratch.")
@@ -269,7 +220,7 @@ def play():
         #o = Moving_Obstacle(env.grid, 2, 3)
         #o.plot()
 
-        #env.grid[env.agent_position] = 'A'
+        env.grid[env.agent_position] = 'A'
         print(env.grid)
 
         state = env.preprocess_state()  # Initial state
@@ -289,7 +240,7 @@ def play():
                 #total_reward -= 100
 
             print("\n")
-            print(env.grid)
+            env.render()
             step += 1
         m.recordIteration(total_reward, True if env.agent_position == env.destination else False, step)
         print(f"Total Reward: {total_reward}")
