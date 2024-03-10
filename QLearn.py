@@ -258,7 +258,7 @@ def main():
                     break
             m.recordIteration(total_reward, True if total_reward > 0 else False, step)
             print(f"Total Reward: {total_reward}")
-
+        m.printMetrics()
     else:
         print("Invalid mode. Please choose 'train' or 'play'.")
 
