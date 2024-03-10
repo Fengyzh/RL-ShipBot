@@ -18,8 +18,8 @@ allScore = []
 
 gridMap = GridWorld(8,8)
 
-gridMap.generate_grid_world(False, False)
-#gridMap.static_map_test(3)
+gridMap.generate_grid_world(True, True)
+#gridMap.static_map_test(2)
 gridMap.set_start_pos(DEFAULT_AGENT_POS[0], DEFAULT_AGENT_POS[1])
 envMap = gridMap.grid
 
@@ -65,11 +65,11 @@ class DQNAgent:
         else:
             self.swap_count += 1
 
-        target = self.model(torch.FloatTensor(state))
-        t = self.target_model(torch.FloatTensor(next_state))[0]
+        target = self.target_model(torch.FloatTensor(state))
+        t = self.model(torch.FloatTensor(next_state))[0]
         target[0][action] = reward + self.gamma * torch.max(t)
         loss_fn = nn.MSELoss()
-        optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        optimizer = optim.Adam(self.target_model.parameters(), lr=self.learning_rate)
         optimizer.zero_grad()
         output = self.target_model(torch.FloatTensor(state))
         loss = loss_fn(output, target)
@@ -231,6 +231,7 @@ def play():
             #rint(env.grid)
             env.tick()
             step += 1
+            env.tick()
         m.recordIteration(total_reward, True if env.agent_position == env.destination else False, step)
         print(f"Total Reward: {total_reward}")
         env.reset()

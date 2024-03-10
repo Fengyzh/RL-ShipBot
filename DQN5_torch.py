@@ -20,8 +20,8 @@ allScore = []
 
 
 gridMap = GridWorld(8,8)
-gridMap.generate_grid_world(True, True)
-#gridMap.static_map_test(4)
+gridMap.generate_grid_world(False, False)
+#gridMap.static_map_test(2)
 gridMap.set_start_pos(DEFAULT_AGENT_POS[0], DEFAULT_AGENT_POS[1])
 envMap = gridMap.grid
 
@@ -50,7 +50,7 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
         self.gamma = 0.99
-        self.epsilon = 0.8
+        self.epsilon = 0.6
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -91,7 +91,7 @@ class DQNAgent:
         for state, action, reward, next_state, done in minibatch:
             state = torch.tensor(state, dtype=torch.float32)
             next_state = torch.tensor(next_state, dtype=torch.float32)
-            target = self.model(state)
+            target = self.target_model(state)
             if done:
                 target[0][action] = reward
             else:
@@ -99,15 +99,12 @@ class DQNAgent:
                 target[0][action] = reward + self.gamma * torch.max(t)
             X.append(state)
             y.append(target)
-        
-
         X = torch.cat(X)
         y = torch.cat(y)
         criterion = nn.MSELoss()
         optimizer = optim.Adam(self.target_model.parameters(), lr=self.learning_rate)
-        # One epoch
         optimizer.zero_grad()
-        outputs = self.model(X)
+        outputs = self.target_model(X)
         loss = criterion(outputs, y)
         loss.backward()
         optimizer.step()
@@ -195,7 +192,7 @@ class Environment:
 
 def train():
     EPISODES = 100
-    BATCH_SIZE = 16
+    BATCH_SIZE = 32
 
     env = Environment()
     state_size = env.state_size
@@ -244,7 +241,7 @@ def play():
     agent = DQNAgent(state_size, action_size)
     m = Metrics()
 
-    print(env.grid)
+    #print(env.grid)
 
 
     agent.load("trained_model.pth")
@@ -269,12 +266,14 @@ def play():
             state = env.preprocess_state()
             #print("\n")
             #print(env.grid)
+            env.tick()
             step += 1
         m.recordIteration(total_reward, True if env.agent_position == env.destination else False, step)
         print(f"Total Reward: {total_reward}")
         env.reset()
     m.printMetrics()
     allScore.append(m.success)
+    print(env.grid)
 
 
 usr = input("Train/Play (Enter: t or p): ")
@@ -289,7 +288,7 @@ elif usr == "p":
 
     # Create scatter plot
     plt.scatter(x_values, allScore)
-    plt.ylim(0, 5)
+    plt.ylim(0, 200)
 
     # Add labels and title
     plt.xlabel('Runs')
