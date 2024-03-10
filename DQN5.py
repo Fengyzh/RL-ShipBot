@@ -262,7 +262,7 @@ def play():
 
     #print(env.grid)
 
-    for episode in range(2):
+    for episode in range(200):
         print("-------------- Start Iter ------------------")
 
         #o = On_Off_Obstacle(env.grid, 2, 3)

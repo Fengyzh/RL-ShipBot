@@ -8,13 +8,18 @@ from obstacles import On_Off_Obstacle, Moving_Obstacle
 from metric import Metrics
 from grid import GridWorld
 from util import encouragement
+import matplotlib.pyplot as plt
 
-DEFAULT_AGENT_POS = (5, 5)
+DEFAULT_AGENT_POS = (0, 0)
 DEFAULT_DES_POS = (7, 7)
-MAX_STEP = 200
+MAX_STEP = 1000
 
-gridMap = GridWorld(7,7)
-gridMap.generate_grid_world(True, True)
+allScore = []
+
+gridMap = GridWorld(8,8)
+
+gridMap.generate_grid_world(False, False)
+#gridMap.static_map_test(3)
 gridMap.set_start_pos(DEFAULT_AGENT_POS[0], DEFAULT_AGENT_POS[1])
 envMap = gridMap.grid
 
@@ -26,7 +31,7 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
         self.gamma = 0.99
-        self.epsilon = 0.1
+        self.epsilon = 0.3
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -54,13 +59,19 @@ class DQNAgent:
 
 
     def train(self, state, action, reward, next_state):
+        if self.swap_count == SWAP_COUNT:
+            self.model.load_state_dict(self.target_model.state_dict())
+            self.swap_count = 0
+        else:
+            self.swap_count += 1
+
         target = self.model(torch.FloatTensor(state))
-        t = self.model(torch.FloatTensor(next_state))[0]
+        t = self.target_model(torch.FloatTensor(next_state))[0]
         target[0][action] = reward + self.gamma * torch.max(t)
         loss_fn = nn.MSELoss()
         optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         optimizer.zero_grad()
-        output = self.model(torch.FloatTensor(state))
+        output = self.target_model(torch.FloatTensor(state))
         loss = loss_fn(output, target)
         loss.backward()
         optimizer.step()
@@ -132,9 +143,9 @@ class Environment:
 
     def _get_reward(self):
         if self.grid[self.agent_position] == "E":
-            return 100  # Reward for reaching the destination
+            return 1000  # Reward for reaching the destination
         elif self.grid[self.agent_position] == "X":
-            return -100  # Penalty for hitting an obstacle
+            return -500  # Penalty for hitting an obstacle
         else:
             return encouragement(self.agent_position, self.temp_agent_pos, self.destination, False, self.stepCount, 0, -1)
 
@@ -148,7 +159,7 @@ class Environment:
 
 
 def train():
-    EPISODES = 200
+    EPISODES = 100
 
     env = Environment()
     state_size = env.state_size
@@ -217,18 +228,35 @@ def play():
             total_reward += reward
             state = env.preprocess_state()
             #print("\n")
-            #print(env.grid)
+            #rint(env.grid)
+            env.tick()
             step += 1
         m.recordIteration(total_reward, True if env.agent_position == env.destination else False, step)
         print(f"Total Reward: {total_reward}")
         env.reset()
     m.printMetrics()
+    allScore.append(m.success)
 
 
 usr = input("Train/Play (Enter: t or p): ")
 if usr == "t":
-    for i in range(1):
+    for i in range(5):
         train()
 elif usr == "p":
-    for i in range(1):
+    for i in range(10):
         play()
+    
+# Generating x-values (arbitrary)
+    x_values = range(len(allScore))
+
+    # Create scatter plot
+    plt.scatter(x_values, allScore)
+    plt.ylim(0, 200)
+
+    # Add labels and title
+    plt.xlabel('Runs')
+    plt.ylabel('Scores')
+    plt.title('Scores Plot')
+
+    # Show plot
+    plt.show()

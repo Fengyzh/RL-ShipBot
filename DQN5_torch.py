@@ -8,14 +8,20 @@ from obstacles import On_Off_Obstacle, Moving_Obstacle
 from metric import Metrics
 from grid import GridWorld
 from util import encouragement
+import matplotlib.pyplot as plt
 
-DEFAULT_AGENT_POS = (3, 3)
+
+DEFAULT_AGENT_POS = (0, 0)
 DEFAULT_DES_POS = (7, 7)
-MAX_STEP = 200
+MAX_STEP = 1000
+
+
+allScore = []
+
 
 gridMap = GridWorld(8,8)
 gridMap.generate_grid_world(True, True)
-gridMap.static_map_test(1)
+#gridMap.static_map_test(4)
 gridMap.set_start_pos(DEFAULT_AGENT_POS[0], DEFAULT_AGENT_POS[1])
 envMap = gridMap.grid
 
@@ -67,7 +73,7 @@ class DQNAgent:
     def pick_action(self, state):
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
-        with torch.no_grad():
+        else:
             state = torch.tensor(state, dtype=torch.float32)
             q_values = self.model(state)
             return torch.argmax(q_values).item()
@@ -172,9 +178,9 @@ class Environment:
 
     def _get_reward(self):
         if self.grid[self.agent_position] == "E":
-            return 200  # Reward for reaching the destination
+            return 1000  # Reward for reaching the destination
         elif self.grid[self.agent_position] == "X":
-            return -100  # Penalty for hitting an obstacle
+            return -500  # Penalty for hitting an obstacle
         else:
             return encouragement(self.agent_position, self.temp_agent_pos, self.destination, False, self.stepCount, 0, -1)
 
@@ -246,7 +252,7 @@ def play():
 
     print("No pre-trained model found, starting training from scratch.")
 
-    for episode in range(1):
+    for episode in range(200):
         print("-------------- Start Iter ------------------")
 
         #print(env.grid)
@@ -268,12 +274,27 @@ def play():
         print(f"Total Reward: {total_reward}")
         env.reset()
     m.printMetrics()
+    allScore.append(m.success)
 
 
 usr = input("Train/Play (Enter: t or p): ")
 if usr == "t":
-    for i in range(10):
+    for i in range(1):
         train()
 elif usr == "p":
     for i in range(10):
         play()
+# Generating x-values (arbitrary)
+    x_values = range(len(allScore))
+
+    # Create scatter plot
+    plt.scatter(x_values, allScore)
+    plt.ylim(0, 5)
+
+    # Add labels and title
+    plt.xlabel('Runs')
+    plt.ylabel('Scores')
+    plt.title('Scores Plot')
+
+    # Show plot
+    plt.show()
