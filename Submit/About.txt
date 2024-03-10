@@ -1,0 +1,7 @@
+DQN_nor_torch (Double DQN Model): Uses the dqn_nor.pth weights
+DQN5_torch (Double DQN with Experience Replay Model): Uses trained_model.pth weights
+
+grid.py: For generating random maps and testing on pre-defined maps
+obstacles.py: For dynamic obstacles generation
+util.py: For utils like environment to partial vision and reward shaping
+metric.py: For logging metrics at each run
