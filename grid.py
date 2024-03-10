@@ -97,7 +97,7 @@ class GridWorld:
                 ["~", "~", "~", "~", "~", "X", "~", "E"]
             ])
 
-    def generate_grid_world(self, onOffObstacles=[], movingObstacles=[]):
+    def generate_grid_world(self, onOffObstacles=True, movingObstacles=True):
         # Place the destination at the bottom-right corner
         self.grid[self.goal[0], self.goal[1]] = 'E'
         
