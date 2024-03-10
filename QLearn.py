@@ -4,6 +4,7 @@ import json
 from util import env_to_vision
 from grid import GridWorld
 from metric import Metrics
+from util import encouragement
 
 # Define constants
 EMPTY = 0
@@ -16,7 +17,7 @@ ACTIONS = ['up', 'down', 'left', 'right']
 # Refact out world_size
 # State should be 0-9 representing the surrrounding spaces
 class QLearningAgent:
-    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.1):
+    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.2):
         self.world_size = world_size
         self.q_table = {}
         self.other_q_table = {}
@@ -124,10 +125,14 @@ class Environment:
 
         self.world[self.agent_pos] = '~'
         self.max_move_size -= 1
+        self.old_agent_pos = self.agent_pos
 
-        if 0 <= new_pos[0] < len(self.world) and 0 <= new_pos[1] < len(self.world[0]):
+        if 0 <= new_pos[0] < len(self.world) and 0 <= new_pos[1] < len(self.world[0]) or self.max_move_size == 0:
             # Move agent
-            if self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'E' or self.max_move_size == 0:
+            if self.max_move_size == 0:
+                self.agent_pos = new_pos  # Game over if agent hits max move limit
+                self.done = True
+            elif self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'E':
                 self.agent_pos = new_pos  # Game over if agent hits obstacle
                 self.done = True
             else:
@@ -146,7 +151,7 @@ class Environment:
         elif self.world[self.agent_pos[0], self.agent_pos[1]] == 'X':
             return -1000  # Game over if agent hits obstacle
         else:
-            return (self.gridWorld.goal[0]-self.agent_pos[0])*-1 + (self.gridWorld.goal[1]-self.agent_pos[1])*-1 
+            return encouragement(self.agent_pos, self.old_agent_pos, self.gridWorld.goal, False, abs(self.max_move_size-1000), 1, -1)
 
 
     def print_world(self):
@@ -158,7 +163,7 @@ class Environment:
 def main():
     # Define parameters
     world_size = 8
-    num_episodes = 500
+    num_episodes = 50
     num_iterations = 100
 
     total_wins = 0
@@ -218,7 +223,7 @@ def main():
 
     elif mode == 'p':
 
-        num_episodes = 5
+        num_episodes = 1000
 
         # Initialize grid environment and agent
         environment = Environment(world_size)
@@ -230,10 +235,10 @@ def main():
 
         for episode in range(num_episodes):
             # Test loop
+            environment.gridWorld.static_map_test(3)
             environment.reset()
 
             total_reward = 0
-            step = 0
 
             while True:
                 state = environment.get_state()
@@ -243,20 +248,19 @@ def main():
                 # Grid.tick
                 environment.tick()
 
-                #environment.print_world()
-                #print()
+                environment.print_world()
+                print()
 
                 reward = environment.get_reward()
                 total_reward += reward
-                step += 1
 
                 if environment.world[environment.get_pos()] == "E":
                     print("Reached destination!")
                     break
-                elif environment.world[environment.get_pos()] == 'X' :
-                    print("Game over! Agent hit an obstacle.")
+                elif environment.world[environment.get_pos()] == 'X':
+                    print("Game over! Agent hit an obstacle or ran out of steps.")
                     break
-            m.recordIteration(total_reward, True if total_reward > 0 else False, step)
+            m.recordIteration(total_reward, True if environment.agent_pos == environment.gridWorld.goal else False, abs(environment.max_move_size-1000))
             print(f"Total Reward: {total_reward}")
         m.printMetrics()
     else:

@@ -4,6 +4,7 @@ import json
 from util import env_to_vision
 from grid import GridWorld
 from metric import Metrics
+from util import encouragement
 
 # Define constants
 EMPTY = 0
@@ -16,7 +17,7 @@ ACTIONS = ['up', 'down', 'left', 'right']
 # Refact out world_size
 # State should be 0-9 representing the surrrounding spaces
 class QLearningAgent:
-    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.8):
+    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.2):
         self.world_size = world_size
         self.q_table = {}
         self.learning_rate = learning_rate
@@ -36,8 +37,8 @@ class QLearningAgent:
             return np.argmax(self.q_table[state])
 
     def update_q_value(self, state, action, reward, next_state):
-        print(state, action)
-        print(self.q_table)
+        #print(state, action)
+        #print(self.q_table)
         if next_state is None:
             # Handle case when next_state is None (agent hits obstacle)
             old_q_value = self.q_table[state][action]
@@ -102,10 +103,14 @@ class Environment:
 
         self.world[self.agent_pos] = '~'
         self.max_move_size -= 1
+        self.old_agent_pos = self.agent_pos
 
-        if 0 <= new_pos[0] < len(self.world) and 0 <= new_pos[1] < len(self.world[0]):
+        if 0 <= new_pos[0] < len(self.world) and 0 <= new_pos[1] < len(self.world[0]) or self.max_move_size == 0:
+            if self.max_move_size == 0:
+                self.agent_pos = new_pos  # Game over if agent hits max move limit
+                self.done = True
             # Move agent
-            if self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'E' or self.max_move_size == 0:
+            elif self.world[new_pos[0], new_pos[1]] == 'X' or self.world[new_pos[0], new_pos[1]] == 'E':
                 self.agent_pos = new_pos  # Game over if agent hits obstacle
                 self.done = True
             else:
@@ -124,7 +129,7 @@ class Environment:
         elif self.world[self.agent_pos[0], self.agent_pos[1]] == 'X':
             return -1000  # Game over if agent hits obstacle
         else:
-            return (self.gridWorld.goal[0]-self.agent_pos[0])*-1 + (self.gridWorld.goal[1]-self.agent_pos[1])*-1
+            return encouragement(self.agent_pos, self.old_agent_pos, self.gridWorld.goal, False, abs(self.max_move_size-1000), 1, -1)
 
 
     def print_world(self):
@@ -136,7 +141,7 @@ class Environment:
 def main():
     # Define parameters
     world_size = 8
-    num_episodes = 500
+    num_episodes = 50
     num_iterations = 100
 
     # Initialize grid environment and agent
@@ -166,16 +171,16 @@ def main():
                 total_reward = 0
                 while not environment.done:
                     state = environment.get_state()
-                    print("train state: ", state)
+                    #print("train state: ", state)
                     action = agent.choose_action(state)
-                    print(action)
+                    #print(action)
                     environment.move_agent(ACTIONS[action])
 
                     # Grid.tick
                     environment.tick()
 
                     #print("PPPPPPPPOS: ", environment.agent_pos)
-                    print("\n")
+                    #print("\n")
                     environment.print_world()
                     print("\n")
                     reward = environment.get_reward()
@@ -195,11 +200,11 @@ def main():
             print(f"Total Losses: {total_loss}")
 
         # Save Q-table
-        agent.save_q_table("q_tableq.json")
+        agent.save_q_table("q_table.json")
 
     elif mode == 'p':
 
-        num_episodes = 5
+        num_episodes = 1000
 
         # Initialize grid environment and agent
         environment = Environment(world_size)
@@ -207,17 +212,14 @@ def main():
         m = Metrics()
 
         # Load Q-table
-        agent.load_q_table("q_tableq.json")
-
-        # Test loop
-        environment.reset()
+        agent.load_q_table("q_table.json")
 
         for episode in range(num_episodes):
             # Test loop
+            environment.gridWorld.static_map_test(3)
             environment.reset()
 
             total_reward = 0
-            step = 0
 
             while True:
                 state = environment.get_state()
@@ -229,16 +231,20 @@ def main():
 
                 environment.print_world()
                 print()
-                if environment.world[environment.get_pos()] == "END":
+
+                reward = environment.get_reward()
+                total_reward += reward
+
+                if environment.world[environment.get_pos()] == "E":
                     print("Reached destination!")
                     break
-                elif environment.world[environment.get_pos()] == 'X' :
-                    print("Game over! Agent hit an obstacle.")
+                elif environment.world[environment.get_pos()] == 'X':
+                    print("Game over! Agent hit an obstacle or ran out of steps.")
                     break
 
-            m.recordIteration(total_reward, True if total_reward > 0 else False, step)
+            m.recordIteration(total_reward, True if environment.agent_pos == environment.gridWorld.goal else False, abs(environment.max_move_size-1000))
             print(f"Total Reward: {total_reward}")
-
+        m.printMetrics()
     else:
         print("Invalid mode. Please choose 'train' or 'play'.")
 
