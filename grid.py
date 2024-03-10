@@ -26,6 +26,7 @@ class GridWorld:
                 ["~", "~", "~", "~", "~", "~", "~", "~"],
                 ["~", "~", "~", "~", "~", "~", "~", "E"]
             ])
+            
         if number == 2:
             self.grid = np.array([        # The world
                 ["~", "~", "~", "~", "~", "~", "~", "~"],
@@ -61,42 +62,44 @@ class GridWorld:
                 temp = On_Off_Obstacle(self.grid, obstacle_x, obstacle_y, random.randint(3, 5))
                 temp.plot()
                 self.dynamic_obs[(temp.get_obs_pos)] = temp
-        
+
         if number == 4:
             self.grid = np.array([        # The world
+                ["~", "~", "~", "~", "X", "~", "~", "~"],
                 ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "E"]
-            ])
-        
-        if number == 5:
-            self.grid = np.array([        # The world
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "X", "~", "~", "~", "~", "~"],
                 ["~", "~", "~", "~", "~", "~", "X", "~"],
+                ["~", "~", "~", "X", "~", "~", "~", "~"],
+                ["X", "~", "~", "~", "~", "~", "~", "~"],
                 ["~", "~", "~", "~", "~", "~", "~", "~"],
                 ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "X"],
-                ["~", "X", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "X", "~", "E"]
+                ["~", "~", "~", "~", "X", "~", "~", "E"]
             ])
+            coords_x = [2,0,7,7,7]
+            coords_y = [2,6,2,0,5]
+            # Place an obstacle at a random position
+            for i in range(5):
+                obstacle_x, obstacle_y = coords_x[i], coords_y[i]
+                # Make sure the obstacle is not placed at the top-left corner or the bottom-right corner or conflicting with another object's spawn position
+                while (obstacle_x == 0 and obstacle_y == 0) or (obstacle_x == self.width-1 and obstacle_y == self.length-1) or self.conflict_of_position_check(obstacle_x, obstacle_y):
+                    obstacle_x, obstacle_y = random.randint(0, self.width-1), random.randint(0, self.length-1)
 
-        if number == 6:
-            self.grid = np.array([        # The world
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "X", "~", "~", "~", "~", "~"],
-                ["X", "~", "~", "~", "~", "~", "X", "~"],
-                ["~", "X", "~", "X", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "X", "~", "~", "~", "X"],
-                ["~", "X", "~", "~", "~", "~", "~", "~"],
-                ["~", "~", "~", "~", "~", "X", "~", "E"]
-            ])
+                temp = On_Off_Obstacle(self.grid, obstacle_x, obstacle_y, random.randint(3, 5))
+                temp.plot()
+                self.dynamic_obs[(temp.get_obs_pos)] = temp
+
+            coords_x = [0,0,5,4,7]
+            coords_y = [3,6,2,6,6]
+            for i in range(5):
+                obstacle_x, obstacle_y = coords_x[i], coords_y[i]
+                if (random.randint(0, 9) < 9):
+                    # Make sure the obstacle is not placed at the top-left corner or the bottom-right corner or conflicting with another object's spawn position
+                    while (obstacle_x == 0 and obstacle_y == 0) or (obstacle_x == self.width-1 and obstacle_y == self.length-1) or self.conflict_of_position_check(obstacle_x, obstacle_y):
+                        obstacle_x, obstacle_y = random.randint(0, self.width-1), random.randint(0, self.length-1)
+
+                    temp = Moving_Obstacle(self.grid, obstacle_x, obstacle_y, random.choice(['up', 'left', 'right', 'down']))
+                    temp.plot()
+                    self.dynamic_obs[temp.get_obs_pos] = temp
+
 
     def generate_grid_world(self, onOffObstacles=True, movingObstacles=True):
         # Place the destination at the bottom-right corner

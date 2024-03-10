@@ -17,7 +17,7 @@ ACTIONS = ['up', 'down', 'left', 'right']
 # Refact out world_size
 # State should be 0-9 representing the surrrounding spaces
 class QLearningAgent:
-    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.2):
+    def __init__(self, world_size, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.3):
         self.world_size = world_size
         self.q_table = {}
         self.other_q_table = {}
@@ -162,7 +162,7 @@ class Environment:
 def main():
     # Define parameters
     world_size = 8
-    num_episodes = 150
+    num_episodes = 300
     num_iterations = 100
 
     total_wins = 0
@@ -234,7 +234,7 @@ def main():
 
         for episode in range(num_episodes):
             # Test loop
-            environment.gridWorld.static_map_test(1)
+            environment.gridWorld.static_map_test(4)
             environment.reset()
 
             total_reward = 0
