@@ -14,7 +14,7 @@ class GridWorld:
         self.grid = np.full((self.width, self.length), '~')
 
     def static_map_test(self, number):
-        self.dynamic_obs = {}
+        #self.dynamic_obs = {}
         if number == 1:
             self.grid = np.array([        # The world
                 ["~", "~", "~", "~", "~", "~", "~", "~"],

@@ -10,7 +10,7 @@ from grid import GridWorld
 from util import encouragement
 import matplotlib.pyplot as plt
 
-DEFAULT_AGENT_POS = (5, 5)
+DEFAULT_AGENT_POS = (0, 0)
 DEFAULT_DES_POS = (7, 7)
 MAX_STEP = 1000
 
@@ -18,8 +18,8 @@ allScore = []
 
 gridMap = GridWorld(8,8)
 
-gridMap.generate_grid_world(True, True)
-gridMap.static_map_test(6)
+gridMap.generate_grid_world(False, False)
+#gridMap.static_map_test(3)
 gridMap.set_start_pos(DEFAULT_AGENT_POS[0], DEFAULT_AGENT_POS[1])
 envMap = gridMap.grid
 
@@ -228,7 +228,8 @@ def play():
             total_reward += reward
             state = env.preprocess_state()
             #print("\n")
-            #print(env.grid)
+            #rint(env.grid)
+            env.tick()
             step += 1
         m.recordIteration(total_reward, True if env.agent_position == env.destination else False, step)
         print(f"Total Reward: {total_reward}")
