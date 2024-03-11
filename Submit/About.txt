@@ -1,3 +1,6 @@
+OldQLearn.py (Baseline Q-Learn Model): The file uses q_table.json to store the weights. In order to change the static test map used (1-4), must change in code line 218
+QLearn.py (Double Q-Learn Model): The file uses q_table2.json to store the weights. In order to change the static test map used (1-4), must change in code line 237
+
 DQN_nor_torch (Double DQN Model): Uses the dqn_nor.pth weights
 DQN5_torch (Double DQN with Experience Replay Model): Uses trained_model.pth weights
 
